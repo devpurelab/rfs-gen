@@ -25,22 +25,30 @@ export function rfsClamp(valuePx, minWidth, maxWidth) {
 }
 
 export function generateLines(scale, globalMin, globalMax) {
-  return Object.entries(scale).map(([key, val]) => {
-    let valuePx, minWidth, maxWidth
+  return Object.entries(scale).flatMap(([key, val]) => {
+    let valuePx, minWidth, maxWidth, lineHeight
 
     if (typeof val === 'object' && val !== null) {
-      valuePx  = toPx(val.value)
-      minWidth = parseInt(val.min  ?? globalMin)
-      maxWidth = parseInt(val.max  ?? globalMax)
+      valuePx    = toPx(val.value)
+      minWidth   = parseInt(val.min ?? globalMin)
+      maxWidth   = parseInt(val.max ?? globalMax)
+      lineHeight = val.lineHeight ?? null
     } else {
-      valuePx  = toPx(val)
-      minWidth = globalMin
-      maxWidth = globalMax
+      valuePx    = toPx(val)
+      minWidth   = globalMin
+      maxWidth   = globalMax
+      lineHeight = null
     }
 
     const css     = rfsClamp(valuePx, minWidth, maxWidth)
     const comment = valuePx < RFS_THRESHOLD_PX ? ' /* below threshold */' : ''
-    return `  --text-${key}: ${css};${comment}`
+    const lines   = [`  --text-${key}: ${css};${comment}`]
+
+    if (lineHeight !== null) {
+      lines.push(`  --text-${key}--line-height: ${lineHeight};`)
+    }
+
+    return lines
   })
 }
 
