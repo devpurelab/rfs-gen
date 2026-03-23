@@ -1,0 +1,16 @@
+{
+  "name": "rfs-gen",
+  "version": "1.0.0",
+  "description": "RFS fluid type scale generator for Tailwind v4",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "rfs-gen": "src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
