@@ -6,7 +6,7 @@ const MARKER_END   = '/* RFS:END */'
 export function writeToFile(filePath, block) {
   // File non esiste → lo crea con @theme e markers
   if (!existsSync(filePath)) {
-    const content = `@import "tailwindcss";\n\n@theme {\n${block}\n}\n`
+    const content = `@import "tailwindcss";\n\n@theme inline {\n${block}\n}\n`
     writeFileSync(filePath, content, 'utf8')
     return 'created'
   }
@@ -24,7 +24,7 @@ export function writeToFile(filePath, block) {
   }
 
   // Caso 2: @theme presente ma senza markers → inietta all'inizio del blocco @theme
-  const themeMatch = content.match(/@theme\s*\{/)
+  const themeMatch = content.match(/@theme inline\s*\{/)
   if (themeMatch) {
     const insertAt = content.indexOf(themeMatch[0]) + themeMatch[0].length
     content = content.slice(0, insertAt) + '\n' + block + '\n' + content.slice(insertAt)
@@ -33,7 +33,7 @@ export function writeToFile(filePath, block) {
   }
 
   // Caso 3: nessun @theme → lo appende in fondo
-  content = content.trimEnd() + `\n\n@theme {\n${block}\n}\n`
+  content = content.trimEnd() + `\n\n@theme inline {\n${block}\n}\n`
   writeFileSync(filePath, content, 'utf8')
   return 'appended'
 }

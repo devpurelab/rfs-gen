@@ -24,14 +24,14 @@ Values below `20px` are not scaled (fixed rem output).
 **From a local path:**
 
 ```bash
-npm install -D file:../rfs-gen
+npm install -D devpurelab/rfs-gen
 ```
 
 Or in `package.json`:
 
 ```json
 "devDependencies": {
-  "rfs-gen": "file:../rfs-gen"
+  "rfs-gen": "devpurelab/rfs-gen"
 }
 ```
 
