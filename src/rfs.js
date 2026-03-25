@@ -1,61 +1,65 @@
-const BASE = 16
-const RFS_THRESHOLD_PX = 20
+// RFS formula ported from https://github.com/twbs/rfs
+// The value in config is the MAX (at breakpoint and above).
+
+const REM_VALUE      = 16
+const BASE_VALUE_PX  = 20
+const FACTOR         = 10
+const UNIT_PRECISION = 5
+
+function toFixed(number, precision) {
+  const multiplier = 10 ** (precision + 1)
+  const wholeNumber = Math.floor(number * multiplier)
+  return Math.round(wholeNumber / 10) * 10 / multiplier
+}
+
+function toRem(px) {
+  return toFixed(px / REM_VALUE, UNIT_PRECISION) + "rem"
+}
 
 export function toPx(val) {
   val = String(val).trim()
-  if (val.endsWith('rem')) return parseFloat(val) * BASE
-  if (val.endsWith('px'))  return parseFloat(val)
-  return parseFloat(val) * BASE
+  if (val.endsWith("rem")) return parseFloat(val) * REM_VALUE
+  if (val.endsWith("px"))  return parseFloat(val)
+  return parseFloat(val) * REM_VALUE
 }
 
-function fmt(n) {
-  return parseFloat(n.toFixed(4)).toString()
-}
-
-export function toRem(px) {
-  return `${fmt(px / BASE)}rem`
-}
-
-export function rfsClamp(valuePx, minWidth, maxWidth) {
-  if (valuePx < RFS_THRESHOLD_PX) return toRem(valuePx)
-  const maxValue = valuePx * 1.2
-  const slope = (maxValue - valuePx) / (maxWidth - minWidth)
-  const intercept = valuePx - slope * minWidth
-  return `clamp(${toRem(valuePx)}, ${fmt(intercept / BASE)}rem + ${fmt(slope * 100)}vw, ${toRem(maxValue)})`
+export function rfsValue(valuePx, breakpointPx) {
+  if (BASE_VALUE_PX >= Math.abs(valuePx) || FACTOR <= 1) {
+    return toRem(valuePx)
+  }
+  const baseValue = BASE_VALUE_PX + (Math.abs(valuePx) - BASE_VALUE_PX) / FACTOR
+  const diff      = Math.abs(valuePx) - baseValue
+  const baseRem   = toFixed(baseValue / REM_VALUE, UNIT_PRECISION)
+  const vw        = toFixed(diff * 100 / breakpointPx, UNIT_PRECISION)
+  return "calc(" + baseRem + "rem + " + vw + "vw)"
 }
 
 export function generateLines(scale, globalMin, globalMax) {
   return Object.entries(scale).flatMap(([key, val]) => {
-    let valuePx, minWidth, maxWidth, lineHeight
-
-    if (typeof val === 'object' && val !== null) {
-      valuePx    = toPx(val.value)
-      minWidth   = parseInt(val.min ?? globalMin)
-      maxWidth   = parseInt(val.max ?? globalMax)
-      lineHeight = val.lineHeight ?? null
+    let valuePx, breakpointPx, lineHeight
+    if (typeof val === "object" && val !== null) {
+      valuePx      = toPx(val.value)
+      breakpointPx = parseInt(val.max ?? globalMax)
+      lineHeight   = val.lineHeight ?? null
     } else {
-      valuePx    = toPx(val)
-      minWidth   = globalMin
-      maxWidth   = globalMax
-      lineHeight = null
+      valuePx      = toPx(val)
+      breakpointPx = globalMax
+      lineHeight   = null
     }
-
-    const css     = rfsClamp(valuePx, minWidth, maxWidth)
-    const comment = valuePx < RFS_THRESHOLD_PX ? ' /* below threshold */' : ''
-    const lines   = [`  --text-${key}: ${css};${comment}`]
-
+    const css     = rfsValue(valuePx, breakpointPx)
+    const comment = (BASE_VALUE_PX >= Math.abs(valuePx) || FACTOR <= 1) ? " /* below threshold */" : ""
+    const lines   = ["  --text-" + key + ": " + css + ";" + comment]
     if (lineHeight !== null) {
-      lines.push(`  --text-${key}--line-height: ${lineHeight};`)
+      lines.push("  --text-" + key + "--line-height: " + lineHeight + ";")
     }
-
     return lines
   })
 }
 
 export function buildBlock(lines) {
   return [
-    '  /* RFS:START - Auto-generated. Do not edit manually. */',
+    "  /* RFS:START - Auto-generated. Do not edit manually. */",
     ...lines,
-    '  /* RFS:END */',
-  ].join('\n')
+    "  /* RFS:END */",
+  ].join("\n")
 }
