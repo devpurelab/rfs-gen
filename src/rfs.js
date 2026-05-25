@@ -31,7 +31,8 @@ export function rfsValue(valuePx, breakpointPx) {
   const diff      = Math.abs(valuePx) - baseValue
   const baseRem   = toFixed(baseValue / REM_VALUE, UNIT_PRECISION)
   const vw        = toFixed(diff * 100 / breakpointPx, UNIT_PRECISION)
-  return "calc(" + baseRem + "rem + " + vw + "vw)"
+  const max       = toFixed(valuePx / REM_VALUE, UNIT_PRECISION)
+  return "min(" + max + "rem, calc(" + baseRem + "rem + " + vw + "vw))"
 }
 
 export function generateLines(scale, globalMin, globalMax) {
